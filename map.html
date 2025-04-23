@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>GPS確認と登録</title>
+  <style>#map { height: 300px; width: 100%; }</style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+  <h2>現在地確認</h2>
+  <div id="map"></div>
+  <form id="locationForm">
+    <label>名前：<input type="text" id="username" required></label>
+    <button type="submit">登録</button>
+  </form>
+  <p id="status"></p>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    let lat, lng;
+
+    navigator.geolocation.getCurrentPosition(position => {
+      lat = position.coords.latitude;
+      lng = position.coords.longitude;
+
+      const map = L.map('map').setView([lat, lng], 16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+      L.marker([lat, lng]).addTo(map)
+        .bindPopup('あなたの現在地です').openPopup();
+    });
+
+    document.getElementById('locationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('username').value;
+      const res = await fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, lat, lng })
+      });
+      const result = await res.json();
+      document.getElementById('status').textContent = 
+        `登録されました。エリア名：${result.area}`;
+    });
+  </script>
+</body>
+</html>
